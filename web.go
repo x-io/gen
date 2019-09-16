@@ -29,7 +29,7 @@ func Default() *Server {
 		recovery.Middleware(false),
 		//	Compresses([]string{}),
 		// statics.Middleware(statics.Config{Prefix: "static"}),
-		//statics.Middleware(statics.Options{H5History: true}),
+		statics.Middleware(statics.Options{H5History: false}),
 		//Return(),
 		//Param(),
 		//Contexts(),

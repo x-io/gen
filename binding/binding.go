@@ -4,11 +4,16 @@
 
 package binding
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/x-io/gen/core"
+)
 
 const (
-	MIMEJSON              = "application/json"
 	MIMEHTML              = "text/html"
+	MIMETEXT              = "application/text"
+	MIMEJSON              = "application/json"
 	MIMEXML               = "application/xml"
 	MIMEXML2              = "text/xml"
 	MIMEPlain             = "text/plain"
@@ -17,11 +22,14 @@ const (
 	MIMEPROTOBUF          = "application/x-protobuf"
 )
 
+//Binding Binding
 type Binding interface {
 	Name() string
 	Bind(*http.Request, interface{}) error
+	Write(core.Response, interface{}) error
 }
 
+//StructValidator StructValidator
 type StructValidator interface {
 	// ValidateStruct can receive any kind of type and it should never panic, even if the configuration is not right.
 	// If the received type is not a struct, any validation should be skipped and nil must be returned.
@@ -34,28 +42,30 @@ type StructValidator interface {
 var Validator StructValidator = &defaultValidator{}
 
 var (
-	JSON          = jsonBinding{}
 	XML           = xmlBinding{}
+	JSON          = jsonBinding{}
+	Text          = textBinding{}
 	Form          = formBinding{}
 	FormPost      = formPostBinding{}
 	FormMultipart = formMultipartBinding{}
 	ProtoBuf      = protobufBinding{}
 )
 
+//Default Default
 func Default(method, contentType string) Binding {
 	if method == "GET" {
 		return Form
-	} else {
-		switch contentType {
-		case MIMEJSON:
-			return JSON
-		case MIMEXML, MIMEXML2:
-			return XML
-		case MIMEPROTOBUF:
-			return ProtoBuf
-		default: //case MIMEPOSTForm, MIMEMultipartPOSTForm:
-			return Form
-		}
+	}
+
+	switch contentType {
+	case MIMEJSON:
+		return JSON
+	case MIMEXML, MIMEXML2:
+		return XML
+	case MIMEPROTOBUF:
+		return ProtoBuf
+	default: //case MIMEPOSTForm, MIMEMultipartPOSTForm:
+		return Form
 	}
 }
 

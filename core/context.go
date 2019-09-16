@@ -19,13 +19,14 @@ type Context interface {
 	SetData(key string, value interface{})
 
 	Bind(obj interface{}) error
+	Write(obj interface{}) error
 
 	// BindJSON is a shortcut for c.BindWith(obj, binding.JSON)
 	BindJSON(obj interface{}) error
 
-	// // BindWith binds the passed struct pointer using the specified binding engine.
-	// // See the binding package.
-	// BindWith(obj interface{}, b binding.Binding) error
+	// BindWith binds the passed struct pointer using the specified binding engine.
+	// See the binding package.
+	//BindWith(obj interface{}, b binding.Binding) error
 	Action() interface{}
 
 	Result() interface{}
@@ -38,7 +39,7 @@ type Context interface {
 	NotModified(message ...string)
 
 	// Unauthorized writes a 401 HTTP response
-	// Unauthorized(message ...string)
+	Unauthorized(message ...string)
 
 	// NotFound writes a 404 HTTP response
 	NotFound(message ...string)
@@ -50,7 +51,7 @@ type Context interface {
 	AbortJSON(status int, obj interface{})
 
 	Error(status int, err ...error)
-	
+
 	Redirect(url string, status ...int)
 	ToJSON(obj interface{}) error
 	ToXML(obj interface{}) error

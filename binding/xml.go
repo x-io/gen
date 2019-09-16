@@ -7,6 +7,8 @@ package binding
 import (
 	"encoding/xml"
 	"net/http"
+
+	"github.com/x-io/gen/core"
 )
 
 type xmlBinding struct{}
@@ -21,4 +23,15 @@ func (xmlBinding) Bind(req *http.Request, obj interface{}) error {
 		return err
 	}
 	return validate(obj)
+}
+
+func (xmlBinding) Write(response core.Response, obj interface{}) error {
+	if err := xml.NewEncoder(response).Encode(obj); err != nil {
+		response.Header().Del("Content-Type")
+		return err
+	}
+
+	response.WriteHeader(200)
+	response.Header().Set("Content-Type", "application/xml; charset=utf-8")
+	return nil
 }

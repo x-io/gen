@@ -6,6 +6,7 @@ package binding
 
 import (
 	"github.com/golang/protobuf/proto"
+	"github.com/x-io/gen/core"
 
 	"io/ioutil"
 	"net/http"
@@ -32,4 +33,8 @@ func (protobufBinding) Bind(req *http.Request, obj interface{}) error {
 	//which automatically generate by gen-proto
 	return nil
 	//return validate(obj)
+}
+
+func (protobufBinding) Write(response core.Response, obj interface{}) error {
+	return nil
 }

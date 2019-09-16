@@ -1,8 +1,6 @@
 package gen
 
 import (
-	"encoding/json"
-	"encoding/xml"
 	"net"
 	"net/http"
 	"strings"
@@ -84,7 +82,7 @@ func (ctx *context) execute() {
 
 		// not route matched
 	} else if !ctx.response.Written() {
-		//ctx.NotFound()
+		ctx.NotFound()
 	}
 }
 
@@ -182,6 +180,12 @@ func (ctx *context) Bind(obj interface{}) error {
 	return ctx.BindWith(obj, b)
 }
 
+func (ctx *context) Write(obj interface{}) error {
+	ctx.result = "obj"
+	b := binding.Default(ctx.request.Method, ctx.ContentType())
+	return ctx.WriteWith(obj, b)
+}
+
 // BindJSON is a shortcut for c.BindWith(obj, binding.JSON)
 func (ctx *context) BindJSON(obj interface{}) error {
 	return ctx.BindWith(obj, binding.JSON)
@@ -191,7 +195,16 @@ func (ctx *context) BindJSON(obj interface{}) error {
 // See the binding package.
 func (ctx *context) BindWith(obj interface{}, b binding.Binding) error {
 	if err := b.Bind(ctx.request, obj); err != nil {
-		ctx.Abort(400, err.Error()) //.SetType(ErrorTypeBind)
+		ctx.Error(400, err)
+		return err
+	}
+	return nil
+}
+
+func (ctx *context) WriteWith(obj interface{}, b binding.Binding) error {
+	ctx.response.WriteHeader(200)
+	if err := b.Write(ctx.response, obj); err != nil {
+		ctx.Error(400, err)
 		return err
 	}
 	return nil
@@ -355,47 +368,25 @@ func (ctx *context) Abort(status int, body ...string) {
 
 //AbortJSON AbortJSON
 func (ctx *context) AbortJSON(status int, obj interface{}) {
-	ctx.result = "obj"
-	ctx.response.WriteHeader(status)
-	ctx.response.Header().Set("Content-Type", "application/json; charset=utf-8")
-	err := json.NewEncoder(ctx.response).Encode(obj)
-	if err != nil {
-		ctx.response.Header().Del("Content-Type")
-	}
+	ctx.WriteWith(obj, binding.JSON)
 	ctx.index = 100
 }
 
 //ToJSON serves marshaled JSON content from obj
 func (ctx *context) ToJSON(obj interface{}) error {
-	ctx.result = "obj"
-	ctx.response.WriteHeader(200)
-	ctx.response.Header().Set("Content-Type", "application/json; charset=utf-8")
-	err := json.NewEncoder(ctx.response).Encode(obj)
-	if err != nil {
-		ctx.response.Header().Del("Content-Type")
-	}
-	return err
+	return ctx.WriteWith(obj, binding.JSON)
 }
 
 //ToXML serves marshaled XML content from obj
 func (ctx *context) ToXML(obj interface{}) error {
-	ctx.result = "obj"
-	ctx.response.WriteHeader(200)
-	ctx.response.Header().Set("Content-Type", "application/xml; charset=utf-8")
-	err := xml.NewEncoder(ctx.response).Encode(obj)
-	if err != nil {
-		ctx.response.Header().Del("Content-Type")
-	}
-	return err
+	return ctx.WriteWith(obj, binding.XML)
 }
 
 func (ctx *context) ToString(obj string) error {
-	ctx.result = "obj"
-	ctx.response.WriteHeader(200)
-	ctx.response.Header().Set("Content-Type", "application/text; charset=utf-8")
-	_, err := ctx.response.WriteString(obj)
-	if err != nil {
-		ctx.response.Header().Del("Content-Type")
-	}
-	return err
+	return ctx.WriteWith(obj, binding.Text)
+}
+
+func (ctx *context) ToData(obj interface{}) error {
+	b := binding.Default(ctx.request.Method, ctx.ContentType())
+	return ctx.WriteWith(obj, b)
 }

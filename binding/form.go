@@ -4,7 +4,11 @@
 
 package binding
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/x-io/gen/core"
+)
 
 type formBinding struct{}
 type formPostBinding struct{}
@@ -25,6 +29,10 @@ func (formBinding) Bind(req *http.Request, obj interface{}) error {
 	return validate(obj)
 }
 
+func (formBinding) Write(response core.Response, obj interface{}) error {
+	return nil
+}
+
 func (formPostBinding) Name() string {
 	return "form-urlencoded"
 }
@@ -39,6 +47,10 @@ func (formPostBinding) Bind(req *http.Request, obj interface{}) error {
 	return validate(obj)
 }
 
+func (formPostBinding) Write(response core.Response, obj interface{}) error {
+	return nil
+}
+
 func (formMultipartBinding) Name() string {
 	return "multipart/form-data"
 }
@@ -51,4 +63,8 @@ func (formMultipartBinding) Bind(req *http.Request, obj interface{}) error {
 		return err
 	}
 	return validate(obj)
+}
+
+func (formMultipartBinding) Write(response core.Response, obj interface{}) error {
+	return nil
 }

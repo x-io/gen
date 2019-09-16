@@ -99,9 +99,6 @@ func Middleware(options ...Options) core.Middleware {
 					ctx.Next()
 					if ctx.Result() == nil {
 						if opt.H5History {
-
-							//fmt.Println("H5History", rPath)
-
 							//try serving index.html or index.htm
 							if len(opt.IndexFiles) > 0 {
 								for _, index := range opt.IndexFiles {
@@ -125,8 +122,8 @@ func Middleware(options ...Options) core.Middleware {
 									}
 								}
 							}
-							ctx.NotFound()
 						}
+						ctx.NotFound()
 					}
 				}
 			} else {

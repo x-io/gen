@@ -8,6 +8,8 @@ import (
 	"encoding/json"
 
 	"net/http"
+
+	"github.com/x-io/gen/core"
 )
 
 type jsonBinding struct{}
@@ -17,9 +19,18 @@ func (jsonBinding) Name() string {
 }
 
 func (jsonBinding) Bind(req *http.Request, obj interface{}) error {
-	decoder := json.NewDecoder(req.Body)
-	if err := decoder.Decode(obj); err != nil {
+	if err := json.NewDecoder(req.Body).Decode(obj); err != nil {
 		return err
 	}
 	return validate(obj)
+}
+
+func (jsonBinding) Write(response core.Response, obj interface{}) error {
+	if err := json.NewEncoder(response).Encode(obj); err != nil {
+		return err
+	}
+
+	response.WriteHeader(200)
+	response.Header().Set("Content-Type", "application/json; charset=utf-8")
+	return nil
 }
