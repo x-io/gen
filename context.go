@@ -147,7 +147,7 @@ func (ctx *context) SetData(key string, value interface{}) {
 }
 
 func (ctx *context) Get(name string) core.Values {
-	//fmt.Println(ctx.request.Header, ctx.data)
+
 	if v, ok := ctx.request.Header[name]; ok {
 		return core.Values(v[0])
 	}
@@ -311,27 +311,27 @@ func (ctx *context) Redirect(url string, status ...int) {
 }
 
 // NoContent writes a 204 HTTP response
-func (ctx *context) NoContent(message ...string) {
+func (ctx *context) NoContent(message ...interface{}) {
 	ctx.Abort(http.StatusNoContent, message...)
 }
 
 // NotModified writes a 304 HTTP response
-func (ctx *context) NotModified(message ...string) {
+func (ctx *context) NotModified(message ...interface{}) {
 	ctx.Abort(http.StatusNotModified, message...)
 }
 
 // BadRequest writes a 400 HTTP response
-func (ctx *context) BadRequest(message ...string) {
+func (ctx *context) BadRequest(message ...interface{}) {
 	ctx.Abort(http.StatusBadRequest, message...)
 }
 
 // Unauthorized writes a 401 HTTP response
-func (ctx *context) Unauthorized(message ...string) {
+func (ctx *context) Unauthorized(message ...interface{}) {
 	ctx.Abort(http.StatusUnauthorized, message...)
 }
 
 // NotFound writes a 404 HTTP response
-func (ctx *context) NotFound(message ...string) {
+func (ctx *context) NotFound(message ...interface{}) {
 	ctx.Abort(http.StatusNotFound, message...)
 }
 
@@ -350,7 +350,7 @@ func (ctx *context) Error(status int, body ...error) {
 // body. It is useful for returning 4xx or 5xx errors.
 // Once it has been called, any return value from the handler will
 // not be written to the response.
-func (ctx *context) Abort(status int, body ...string) {
+func (ctx *context) Abort(status int, body ...interface{}) {
 	if len(body) > 0 {
 		ctx.result = body[0]
 	} else {
@@ -361,14 +361,16 @@ func (ctx *context) Abort(status int, body ...string) {
 	if len(body) == 0 {
 		ctx.response.WriteString(http.StatusText(status))
 	} else {
-		ctx.response.WriteString(body[0])
-	}
-	ctx.index = 100
-}
 
-//AbortJSON AbortJSON
-func (ctx *context) AbortJSON(status int, obj interface{}) {
-	ctx.WriteWith(obj, binding.JSON)
+		switch d := body[0].(type) {
+		case string:
+			ctx.response.WriteString(d)
+		case error:
+			ctx.response.WriteString(d.Error())
+		default:
+			ctx.ToData(body[0])
+		}
+	}
 	ctx.index = 100
 }
 

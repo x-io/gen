@@ -16,17 +16,15 @@ type (
 	Params []Param
 )
 
-//var _ Set = &Params{}
-
 // Get returns request form as string
 func (p *Params) Get(key string) string {
 
 	if len(key) == 0 {
 		return ""
 	}
-	// if key[0] != ':' && key[0] != '*' {
-	// 	key = ":" + key
-	// }
+	if key[0] != ':' && key[0] != '*' {
+		key = ":" + key
+	}
 
 	for _, v := range *p {
 		if v.Key == key {
@@ -138,22 +136,10 @@ func (p *Params) MustString(key string, defaults ...string) string {
 
 // MustStrings returns request form as slice of string with default
 func (p *Params) MustStrings(key string, defaults ...[]string) []string {
-	if len(key) == 0 {
-		return []string{}
-	}
-	if key[0] != ':' && key[0] != '*' {
-		key = ":" + key
+	if v, _ := p.Strings(key); len(v) > 0 {
+		return v
 	}
 
-	var s = make([]string, 0)
-	for _, v := range *p {
-		if v.Key == key {
-			s = append(s, v.Value)
-		}
-	}
-	if len(s) > 0 {
-		return s
-	}
 	if len(defaults) > 0 {
 		return defaults[0]
 	}
@@ -255,66 +241,6 @@ func (p *Params) MustBool(key string, defaults ...bool) bool {
 	return r
 }
 
-// // Param returns request form as string with default
-// func (ctx *Context) Param(key string, defaults ...string) string {
-// 	return ctx.params.MustString(key, defaults...)
-// }
-
-// // ParamStrings returns request form as slice of string with default
-// func (ctx *Context) ParamStrings(key string, defaults ...[]string) []string {
-// 	return ctx.params.MustStrings(key, defaults...)
-// }
-
-// // ParamEscape returns request form as escaped string with default
-// func (ctx *Context) ParamEscape(key string, defaults ...string) string {
-// 	return ctx.params.MustEscape(key, defaults...)
-// }
-
-// // ParamInt returns request form as int with default
-// func (ctx *Context) ParamInt(key string, defaults ...int) int {
-// 	return ctx.params.MustInt(key, defaults...)
-// }
-
-// // ParamInt32 returns request form as int32 with default
-// func (ctx *Context) ParamInt32(key string, defaults ...int32) int32 {
-// 	return ctx.params.MustInt32(key, defaults...)
-// }
-
-// // ParamInt64 returns request form as int64 with default
-// func (ctx *Context) ParamInt64(key string, defaults ...int64) int64 {
-// 	return ctx.params.MustInt64(key, defaults...)
-// }
-
-// // ParamUint returns request form as uint with default
-// func (ctx *Context) ParamUint(key string, defaults ...uint) uint {
-// 	return ctx.params.MustUint(key, defaults...)
-// }
-
-// // ParamUint32 returns request form as uint32 with default
-// func (ctx *Context) ParamUint32(key string, defaults ...uint32) uint32 {
-// 	return ctx.params.MustUint32(key, defaults...)
-// }
-
-// // ParamUint64 returns request form as uint64 with default
-// func (ctx *Context) ParamUint64(key string, defaults ...uint64) uint64 {
-// 	return ctx.params.MustUint64(key, defaults...)
-// }
-
-// // ParamFloat32 returns request form as float32 with default
-// func (ctx *Context) ParamFloat32(key string, defaults ...float32) float32 {
-// 	return ctx.params.MustFloat32(key, defaults...)
-// }
-
-// // ParamFloat64 returns request form as float64 with default
-// func (ctx *Context) ParamFloat64(key string, defaults ...float64) float64 {
-// 	return ctx.params.MustFloat64(key, defaults...)
-// }
-
-// // ParamBool returns request form as bool with default
-// func (ctx *Context) ParamBool(key string, defaults ...bool) bool {
-// 	return ctx.params.MustBool(key, defaults...)
-// }
-
 // Set sets key/value to params
 func (p *Params) Set(key, value string) {
 	if len(key) == 0 {
@@ -334,15 +260,15 @@ func (p *Params) Set(key, value string) {
 	*p = append(*p, Param{key, value})
 }
 
-// Paramer defines an interface to get params
-type Paramer interface {
-	SetParams([]Param)
-}
+// // Paramer defines an interface to get params
+// type Paramer interface {
+// 	SetParams([]Param)
+// }
 
-// SetParams implemented Paramer
-func (p *Params) SetParams(params []Param) {
-	*p = params
-}
+// // SetParams implemented Paramer
+// func (p *Params) SetParams(params []Param) {
+// 	*p = params
+// }
 
 // Param returns params handle to operate param
 // func Param() Middleware {

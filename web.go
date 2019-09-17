@@ -28,12 +28,11 @@ func Default() *Server {
 		logger.Middleware(),
 		recovery.Middleware(false),
 		//	Compresses([]string{}),
-		// statics.Middleware(statics.Config{Prefix: "static"}),
 		statics.Middleware(statics.Options{H5History: false}),
 		//Return(),
 		//Param(),
 		//Contexts(),
-	) //Logger(),
+	)
 }
 
 // H5History returns an Engine instance with the Logger and Recovery middleware already attached.
@@ -47,5 +46,5 @@ func H5History() *Server {
 		//Return(),
 		//Param(),
 		//Contexts(),
-	) //Logger(),
+	)
 }

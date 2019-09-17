@@ -33,22 +33,26 @@ type Context interface {
 	ClientIP() string
 	IsAjax() bool
 
-	NoContent(message ...string)
+	// NoContent writes a 204 HTTP response
+	NoContent(message ...interface{})
 
 	// NotModified writes a 304 HTTP response
-	NotModified(message ...string)
+	NotModified(message ...interface{})
+
+	// BadRequest writes a 400 HTTP response
+	BadRequest(message ...interface{})
 
 	// Unauthorized writes a 401 HTTP response
-	Unauthorized(message ...string)
+	Unauthorized(message ...interface{})
 
 	// NotFound writes a 404 HTTP response
-	NotFound(message ...string)
+	NotFound(message ...interface{})
+
 	// Abort is a helper method that sends an HTTP header and an optional
 	// body. It is useful for returning 4xx or 5xx errors.
 	// Once it has been called, any return value from the handler will
 	// not be written to the response.
-	Abort(status int, body ...string)
-	AbortJSON(status int, obj interface{})
+	Abort(status int, body ...interface{})
 
 	Error(status int, err ...error)
 
