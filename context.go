@@ -1,6 +1,7 @@
 package gen
 
 import (
+	"database/sql"
 	"net"
 	"net/http"
 	"strings"
@@ -78,12 +79,30 @@ func (ctx *context) execute() {
 		switch fn := ctx.route.Handle().(type) {
 		case func(core.Context):
 			fn(ctx)
+		case func(core.Context) interface{}:
+			if data := fn(ctx); data != nil {
+				switch v := data.(type) {
+				case error:
+					ctx.BadRequest(v)
+				default:
+					ctx.Write(v)
+				}
+			} else {
+				ctx.NoContent()
+			}
+		case func(core.Context) (interface{}, error):
+			if data, err := fn(ctx); err != nil {
+				ctx.BadRequest(err)
+			} else {
+				ctx.Write(data)
+			}
 		case func(core.Context) error:
 			if err := fn(ctx); err != nil {
 				ctx.BadRequest(err)
 			}
-		}
+		default:
 
+		}
 		// not route matched
 	} else if !ctx.response.Written() {
 		ctx.NotFound()
@@ -339,6 +358,7 @@ func (ctx *context) NotFound(message ...interface{}) error {
 }
 
 func (ctx *context) Error(status int, body ...error) error {
+	ctx.index = 100
 	ctx.result = body[0]
 	ctx.response.WriteHeader(status)
 	if len(body) == 0 {
@@ -346,7 +366,7 @@ func (ctx *context) Error(status int, body ...error) error {
 	} else {
 		ctx.response.WriteString(body[0].Error())
 	}
-	ctx.index = 100
+
 	return nil
 }
 
@@ -355,27 +375,36 @@ func (ctx *context) Error(status int, body ...error) error {
 // Once it has been called, any return value from the handler will
 // not be written to the response.
 func (ctx *context) Abort(status int, body ...interface{}) error {
+	ctx.index = 100
+
 	if len(body) > 0 {
 		ctx.result = body[0]
 	} else {
 		ctx.result = ""
 	}
 
-	ctx.response.WriteHeader(status)
 	if len(body) == 0 {
+		ctx.response.WriteHeader(status)
 		ctx.response.WriteString(http.StatusText(status))
 	} else {
-
 		switch d := body[0].(type) {
 		case string:
+			ctx.response.WriteHeader(status)
 			ctx.response.WriteString(d)
 		case error:
-			ctx.response.WriteString(d.Error())
+			if d == sql.ErrNoRows {
+				ctx.response.WriteHeader(http.StatusNoContent)
+				ctx.result = ""
+			} else {
+				ctx.response.WriteHeader(status)
+				ctx.response.WriteString(d.Error())
+			}
 		default:
-			ctx.ToData(body[0])
+			ctx.response.WriteHeader(status)
+			ctx.Write(body[0])
 		}
 	}
-	ctx.index = 100
+
 	return nil
 }
 

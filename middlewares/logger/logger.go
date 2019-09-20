@@ -72,8 +72,9 @@ func WithWriter(out *os.File, notlogged ...string) core.Middleware {
 			//	comment := "" //c.Errors.ByType(ErrorTypePrivate).String()
 
 			if statusCode > 200 {
-				fmt.Fprintf(out, "[Gen] %s \n", c.Result())
-				//comment = c.Result().(string)
+				if result := c.Result(); result != nil {
+					fmt.Fprintf(out, "[Gen] %s \n", result)
+				}
 			}
 
 			if !color || isWindows {

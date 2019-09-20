@@ -39,6 +39,7 @@ type StructValidator interface {
 	ValidateStruct(interface{}) error
 }
 
+//Validator Validator
 var Validator StructValidator = &defaultValidator{}
 
 var (
