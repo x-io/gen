@@ -22,7 +22,6 @@ func (textBinding) Bind(req *http.Request, obj interface{}) error {
 }
 
 func (textBinding) Write(response core.Response, obj interface{}) error {
-	response.WriteHeader(200)
 	response.WriteString(obj.(string))
 	response.Header().Set("Content-Type", "application/text; charset=utf-8")
 	return nil

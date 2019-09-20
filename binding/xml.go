@@ -26,12 +26,10 @@ func (xmlBinding) Bind(req *http.Request, obj interface{}) error {
 }
 
 func (xmlBinding) Write(response core.Response, obj interface{}) error {
+	response.Header().Set("Content-Type", "application/xml; charset=utf-8")
 	if err := xml.NewEncoder(response).Encode(obj); err != nil {
 		response.Header().Del("Content-Type")
 		return err
 	}
-
-	response.WriteHeader(200)
-	response.Header().Set("Content-Type", "application/xml; charset=utf-8")
 	return nil
 }

@@ -85,7 +85,9 @@ func (ctx *context) execute() {
 				case error:
 					ctx.BadRequest(v)
 				default:
-					ctx.Write(v)
+					if !ctx.response.Written() {
+						ctx.Write(v)
+					}
 				}
 			} else {
 				ctx.NoContent()
@@ -93,7 +95,7 @@ func (ctx *context) execute() {
 		case func(core.Context) (interface{}, error):
 			if data, err := fn(ctx); err != nil {
 				ctx.BadRequest(err)
-			} else {
+			} else if !ctx.response.Written() {
 				ctx.Write(data)
 			}
 		case func(core.Context) error:
@@ -223,11 +225,16 @@ func (ctx *context) BindWith(obj interface{}, b binding.Binding) error {
 }
 
 func (ctx *context) WriteWith(obj interface{}, b binding.Binding) error {
-	ctx.result = obj
+	ctx.result = ""
 	ctx.response.WriteHeader(200)
-	if err := b.Write(ctx.response, obj); err != nil {
-		return err
+	
+	if obj != nil {
+		ctx.result = obj
+		if err := b.Write(ctx.response, obj); err != nil {
+			return err
+		}
 	}
+
 	return nil
 }
 
