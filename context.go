@@ -78,6 +78,10 @@ func (ctx *context) execute() {
 		switch fn := ctx.route.Handle().(type) {
 		case func(core.Context):
 			fn(ctx)
+		case func(core.Context) error:
+			if err := fn(ctx); err != nil {
+				ctx.BadRequest(err)
+			}
 		}
 
 		// not route matched
@@ -181,7 +185,6 @@ func (ctx *context) Bind(obj interface{}) error {
 }
 
 func (ctx *context) Write(obj interface{}) error {
-	ctx.result = "obj"
 	b := binding.Default(ctx.request.Method, ctx.ContentType())
 	return ctx.WriteWith(obj, b)
 }
@@ -195,16 +198,15 @@ func (ctx *context) BindJSON(obj interface{}) error {
 // See the binding package.
 func (ctx *context) BindWith(obj interface{}, b binding.Binding) error {
 	if err := b.Bind(ctx.request, obj); err != nil {
-		ctx.Error(400, err)
 		return err
 	}
 	return nil
 }
 
 func (ctx *context) WriteWith(obj interface{}, b binding.Binding) error {
+	ctx.result = obj
 	ctx.response.WriteHeader(200)
 	if err := b.Write(ctx.response, obj); err != nil {
-		ctx.Error(400, err)
 		return err
 	}
 	return nil
@@ -302,40 +304,41 @@ func (ctx *context) Action() interface{} {
 // }
 
 // Redirect redirects the request to another URL
-func (ctx *context) Redirect(url string, status ...int) {
+func (ctx *context) Redirect(url string, status ...int) error {
 	s := http.StatusFound
 	if len(status) > 0 {
 		s = status[0]
 	}
 	http.Redirect(ctx.response, ctx.request, url, s)
+	return nil
 }
 
 // NoContent writes a 204 HTTP response
-func (ctx *context) NoContent(message ...interface{}) {
-	ctx.Abort(http.StatusNoContent, message...)
+func (ctx *context) NoContent(message ...interface{}) error {
+	return ctx.Abort(http.StatusNoContent, message...)
 }
 
 // NotModified writes a 304 HTTP response
-func (ctx *context) NotModified(message ...interface{}) {
-	ctx.Abort(http.StatusNotModified, message...)
+func (ctx *context) NotModified(message ...interface{}) error {
+	return ctx.Abort(http.StatusNotModified, message...)
 }
 
 // BadRequest writes a 400 HTTP response
-func (ctx *context) BadRequest(message ...interface{}) {
-	ctx.Abort(http.StatusBadRequest, message...)
+func (ctx *context) BadRequest(message ...interface{}) error {
+	return ctx.Abort(http.StatusBadRequest, message...)
 }
 
 // Unauthorized writes a 401 HTTP response
-func (ctx *context) Unauthorized(message ...interface{}) {
-	ctx.Abort(http.StatusUnauthorized, message...)
+func (ctx *context) Unauthorized(message ...interface{}) error {
+	return ctx.Abort(http.StatusUnauthorized, message...)
 }
 
 // NotFound writes a 404 HTTP response
-func (ctx *context) NotFound(message ...interface{}) {
-	ctx.Abort(http.StatusNotFound, message...)
+func (ctx *context) NotFound(message ...interface{}) error {
+	return ctx.Abort(http.StatusNotFound, message...)
 }
 
-func (ctx *context) Error(status int, body ...error) {
+func (ctx *context) Error(status int, body ...error) error {
 	ctx.result = body[0]
 	ctx.response.WriteHeader(status)
 	if len(body) == 0 {
@@ -344,13 +347,14 @@ func (ctx *context) Error(status int, body ...error) {
 		ctx.response.WriteString(body[0].Error())
 	}
 	ctx.index = 100
+	return nil
 }
 
 // Abort is a helper method that sends an HTTP header and an optional
 // body. It is useful for returning 4xx or 5xx errors.
 // Once it has been called, any return value from the handler will
 // not be written to the response.
-func (ctx *context) Abort(status int, body ...interface{}) {
+func (ctx *context) Abort(status int, body ...interface{}) error {
 	if len(body) > 0 {
 		ctx.result = body[0]
 	} else {
@@ -372,6 +376,7 @@ func (ctx *context) Abort(status int, body ...interface{}) {
 		}
 	}
 	ctx.index = 100
+	return nil
 }
 
 //ToJSON serves marshaled JSON content from obj

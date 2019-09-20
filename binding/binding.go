@@ -53,9 +53,9 @@ var (
 
 //Default Default
 func Default(method, contentType string) Binding {
-	if method == "GET" {
-		return Form
-	}
+	// if method == "GET" {
+	// 	return Form
+	// }
 
 	switch contentType {
 	case MIMEJSON:
