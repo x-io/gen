@@ -227,9 +227,14 @@ func (ctx *context) BindWith(obj interface{}, b binding.Binding) error {
 func (ctx *context) WriteWith(obj interface{}, b binding.Binding) error {
 	ctx.result = ""
 	ctx.response.WriteHeader(200)
-	
+
 	if obj != nil {
 		ctx.result = obj
+		if v, ok := obj.([]byte); ok {
+			ctx.response.Write(v)
+			return nil
+		}
+
 		if err := b.Write(ctx.response, obj); err != nil {
 			return err
 		}

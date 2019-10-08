@@ -12,14 +12,14 @@ import (
 var (
 	defaultBearer = "Bearer"
 	defaultKey    = "JWT"
-	claimKey      = ""
-	bearerKey     = ""
+	claimKey      = "X-IO"
+	claimVersion  = ""
 )
 
-type auther interface {
-	SetClaims(map[string]interface{})
-	GetClaim(string) interface{}
-}
+// type auther interface {
+// 	SetClaims(map[string]interface{})
+// 	GetClaim(string) interface{}
+// }
 
 type Auther map[string]interface{}
 
@@ -31,10 +31,31 @@ func (a Auther) GetClaim(key string) interface{} {
 	return a[key]
 }
 
+//Init Init
+func Init(key, version string) {
+	claimKey = key
+	claimVersion = version
+}
+
+//NewToken NewToken
+func NewToken(claims ...map[string]interface{}) (string, error) {
+	claim := make(jwt.MapClaims)
+	claim["version"] = claimVersion
+	claim["exp"] = time.Now().Add(time.Hour * 72).Unix()
+	if len(claims) > 0 {
+		for k, v := range claims[0] {
+			claim[k] = v
+		}
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
+
+	return token.SignedString([]byte(claimKey))
+}
+
 //Options Options
 type Options struct {
 	Bearer         string
-	Key            string
 	CheckWebSocket bool
 }
 
@@ -49,11 +70,6 @@ func prepareOptions(options []Options) Options {
 		opt = options[0]
 	}
 
-	// Defaults
-	if len(opt.Key) == 0 {
-		opt.Key = defaultKey
-	}
-
 	if len(opt.Bearer) == 0 {
 		opt.Bearer = defaultBearer
 	}
@@ -63,8 +79,6 @@ func prepareOptions(options []Options) Options {
 // Middleware new create a JWT Middleware
 func Middleware(options ...Options) core.Middleware {
 	option := prepareOptions(options)
-	claimKey = option.Key
-	bearerKey = option.Bearer
 	return func(ctx core.Context) {
 		// response := ctx.Response()
 
@@ -90,7 +104,7 @@ func Middleware(options ...Options) core.Middleware {
 				}
 
 				// Return the key for validation
-				return []byte(option.Key), nil
+				return []byte(claimKey), nil
 			})
 
 			if err == nil {
@@ -116,23 +130,8 @@ func Middleware(options ...Options) core.Middleware {
 	}
 }
 
-//NewToken NewToken
-func NewToken(claims ...map[string]interface{}) (string, error) {
-	claim := make(jwt.MapClaims)
-	claim["exp"] = time.Now().Add(time.Hour * 72).Unix()
-	if len(claims) > 0 {
-		for k, v := range claims[0] {
-			claim[k] = v
-		}
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
-
-	return token.SignedString([]byte(claimKey))
-}
-
 //Parse Parse
-func Parse(tokenString string) (jwt.MapClaims, error) {
+func Parse(bearerKey, tokenString string) (jwt.MapClaims, error) {
 	l := len(bearerKey)
 	token, err := jwt.Parse(tokenString[l+1:], func(token *jwt.Token) (interface{}, error) {
 		// Always check the signing method
@@ -153,18 +152,3 @@ func Parse(tokenString string) (jwt.MapClaims, error) {
 
 	return nil, err
 }
-
-// //NewToken NewToken
-// func NewToken(key string, claims ...map[string]interface{}) (string, error) {
-// 	claim := make(jwt.MapClaims)
-// 	claim["exp"] = time.Now().Add(time.Hour * 72).Unix()
-// 	if len(claims) > 0 {
-// 		for k, v := range claims[0] {
-// 			claim[k] = v
-// 		}
-// 	}
-
-// 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
-
-// 	return token.SignedString([]byte(key))
-// }
