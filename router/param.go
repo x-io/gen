@@ -22,9 +22,9 @@ func (p *Params) Get(key string) string {
 	if len(key) == 0 {
 		return ""
 	}
-	if key[0] != ':' && key[0] != '*' {
-		key = ":" + key
-	}
+	// if key[0] != ':' && key[0] != '*' {
+	// 	key = ":" + key
+	// }
 
 	for _, v := range *p {
 		if v.Key == key {
