@@ -19,23 +19,25 @@ var (
 	cyan    = string([]byte{27, 91, 57, 55, 59, 52, 54, 109})
 	reset   = string([]byte{27, 91, 48, 109})
 
+	out   = os.Stdout
 	color = true
 )
 
 // Middleware instances a Logger middleware that will write the logs to gen.DefaultWriter
 // By default gen.DefaultWriter = os.Stdout
 func Middleware() core.Middleware {
-	return WithWriter(os.Stdout)
+	return WithWriter()
 }
 
-//SetColor SetColor
-func SetColor(v bool) {
-	color = v
+//SetWriter SetWriter
+func SetWriter(v *os.File, c bool) {
+	out = v
+	color = c
 }
 
 // WithWriter instance a Logger middleware with the specified writter buffer.
 // Example: os.Stdout, a file opened in write mode, a socket...
-func WithWriter(out *os.File, notlogged ...string) core.Middleware {
+func WithWriter(notlogged ...string) core.Middleware {
 	isWindows := false
 	if runtime.GOOS == "windows" {
 		isWindows = true
@@ -48,7 +50,7 @@ func WithWriter(out *os.File, notlogged ...string) core.Middleware {
 			skip[path] = struct{}{}
 		}
 	}
-	//fmt.Println(out)
+
 	return func(c core.Context) {
 		// Start timer
 		start := time.Now()
