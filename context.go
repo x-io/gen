@@ -201,12 +201,12 @@ func (ctx *context) Get(name string) core.Values {
 // It decodes the json payload into the struct specified as a pointer.
 // Like ParseBody() but this method also writes a 400 error if the json is not valid.
 func (ctx *context) Bind(obj interface{}) error {
-	b := binding.Default(ctx.request.Method, ctx.ContentType())
+	b := binding.GetBinding(ctx.request.Method, ctx.ContentType())
 	return ctx.BindWith(obj, b)
 }
 
 func (ctx *context) Write(obj interface{}) error {
-	b := binding.Default(ctx.request.Method, ctx.ContentType())
+	b := binding.GetBinding(ctx.request.Method, ctx.ContentType())
 	return ctx.WriteWith(obj, b)
 }
 
@@ -435,6 +435,6 @@ func (ctx *context) ToString(obj string) error {
 }
 
 func (ctx *context) ToData(obj interface{}) error {
-	b := binding.Default(ctx.request.Method, ctx.ContentType())
+	b := binding.GetBinding(ctx.request.Method, ctx.ContentType())
 	return ctx.WriteWith(obj, b)
 }

@@ -50,10 +50,11 @@ var (
 	FormPost      = formPostBinding{}
 	FormMultipart = formMultipartBinding{}
 	ProtoBuf      = protobufBinding{}
+	Default       = defaultBinding{}
 )
 
-//Default Default
-func Default(method, contentType string) Binding {
+//GetBinding Default
+func GetBinding(method, contentType string) Binding {
 	// if method == "GET" {
 	// 	return Form
 	// }
@@ -65,8 +66,10 @@ func Default(method, contentType string) Binding {
 		return XML
 	case MIMEPROTOBUF:
 		return ProtoBuf
-	default: //case MIMEPOSTForm, MIMEMultipartPOSTForm:
+	case MIMEPOSTForm, MIMEMultipartPOSTForm:
 		return Form
+	default: //case MIMEPOSTForm, MIMEMultipartPOSTForm:
+		return Default
 	}
 }
 

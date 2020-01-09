@@ -118,8 +118,8 @@ func Middleware(options ...Options) core.Middleware {
 					return
 				}
 			}
-			ctx.Abort(http.StatusForbidden)
-			return
+			// ctx.Abort(http.StatusForbidden)
+			// return
 		}
 		// ctx.Unauthorized()
 		ctx.Abort(http.StatusUnauthorized)

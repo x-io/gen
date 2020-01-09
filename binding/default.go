@@ -11,18 +11,23 @@ import (
 	"github.com/x-io/gen/core"
 )
 
-type textBinding struct{}
+type defaultBinding struct{}
 
-func (textBinding) Name() string {
-	return "text"
+func (defaultBinding) Name() string {
+	return "default"
 }
 
-func (textBinding) Bind(req *http.Request, obj interface{}) error {
-
+func (defaultBinding) Bind(req *http.Request, obj interface{}) error {
+	if err := req.ParseForm(); err != nil {
+		return err
+	}
+	if err := mapForm(obj, req.PostForm); err != nil {
+		return err
+	}
 	return validate(obj)
 }
 
-func (textBinding) Write(response core.Response, obj interface{}) error {
+func (defaultBinding) Write(response core.Response, obj interface{}) error {
 	switch data := obj.(type) {
 	case string:
 		response.WriteString(data)

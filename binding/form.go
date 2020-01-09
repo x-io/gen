@@ -5,6 +5,7 @@
 package binding
 
 import (
+	"bytes"
 	"net/http"
 
 	"github.com/x-io/gen/core"
@@ -30,6 +31,20 @@ func (formBinding) Bind(req *http.Request, obj interface{}) error {
 }
 
 func (formBinding) Write(response core.Response, obj interface{}) error {
+	switch data := obj.(type) {
+	case string:
+		response.WriteString(data)
+		break
+	case []byte:
+		response.Write(data)
+		break
+	case *bytes.Buffer:
+		response.Write(data.Bytes())
+		break
+	default:
+		response.WriteString("类型转换异常")
+	}
+	response.Header().Set("Content-Type", "application/text; charset=utf-8")
 	return nil
 }
 
@@ -48,6 +63,20 @@ func (formPostBinding) Bind(req *http.Request, obj interface{}) error {
 }
 
 func (formPostBinding) Write(response core.Response, obj interface{}) error {
+	switch data := obj.(type) {
+	case string:
+		response.WriteString(data)
+		break
+	case []byte:
+		response.Write(data)
+		break
+	case *bytes.Buffer:
+		response.Write(data.Bytes())
+		break
+	default:
+		response.WriteString("类型转换异常")
+	}
+	response.Header().Set("Content-Type", "application/text; charset=utf-8")
 	return nil
 }
 
