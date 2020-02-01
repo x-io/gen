@@ -2,6 +2,7 @@ package logger
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"runtime"
 	"time"
@@ -19,8 +20,8 @@ var (
 	cyan    = string([]byte{27, 91, 57, 55, 59, 52, 54, 109})
 	reset   = string([]byte{27, 91, 48, 109})
 
-	out   = os.Stdout
-	color = true
+	out   io.Writer = os.Stdout
+	color           = true
 )
 
 // Middleware instances a Logger middleware that will write the logs to gen.DefaultWriter
@@ -30,8 +31,8 @@ func Middleware() core.Middleware {
 }
 
 //SetWriter SetWriter
-func SetWriter(v *os.File, c bool) {
-	out = v
+func SetWriter(w io.Writer, c bool) {
+	out = w
 	color = c
 }
 
