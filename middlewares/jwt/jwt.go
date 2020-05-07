@@ -3,6 +3,7 @@ package jwt
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -57,6 +58,7 @@ func NewToken(claims ...map[string]interface{}) (string, error) {
 type Options struct {
 	Bearer         string
 	CheckWebSocket bool
+	Exclude        []string
 }
 
 //NewOption NewOption
@@ -80,8 +82,6 @@ func prepareOptions(options []Options) Options {
 func Middleware(options ...Options) core.Middleware {
 	option := prepareOptions(options)
 	return func(ctx core.Context) {
-		// response := ctx.Response()
-
 		request := ctx.Request()
 
 		if option.CheckWebSocket {
@@ -121,12 +121,14 @@ func Middleware(options ...Options) core.Middleware {
 			// ctx.Abort(http.StatusForbidden)
 			// return
 		}
-		// ctx.Unauthorized()
-		ctx.Abort(http.StatusUnauthorized)
-		return
 		//}
 
-		//ctx.Next()
+		if !isContain(option.Exclude, request.URL.Path) {
+			ctx.Abort(http.StatusUnauthorized)
+			return
+		}
+
+		ctx.Next()
 	}
 }
 
@@ -151,4 +153,13 @@ func Parse(bearerKey, tokenString string) (jwt.MapClaims, error) {
 	}
 
 	return nil, err
+}
+
+func isContain(items []string, item string) bool {
+	for _, v := range items {
+		if v == "*" || strings.HasSuffix(item, v) {
+			return true
+		}
+	}
+	return false
 }
