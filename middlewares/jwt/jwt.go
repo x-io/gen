@@ -157,7 +157,7 @@ func Parse(bearerKey, tokenString string) (jwt.MapClaims, error) {
 
 func isContain(items []string, item string) bool {
 	for _, v := range items {
-		if v == "*" || strings.HasSuffix(item, v) {
+		if v == "*" || strings.HasPrefix(item, v) {
 			return true
 		}
 	}
