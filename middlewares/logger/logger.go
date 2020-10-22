@@ -20,7 +20,7 @@ var (
 	cyan    = string([]byte{27, 91, 57, 55, 59, 52, 54, 109})
 	reset   = string([]byte{27, 91, 48, 109})
 
-	out   io.Writer = os.Stdout
+	out   io.Writer = os.Stderr
 	color           = true
 )
 
@@ -31,9 +31,9 @@ func Middleware() core.Middleware {
 }
 
 //SetWriter SetWriter
-func SetWriter(w io.Writer, c bool) {
+func SetWriter(w io.Writer) {
 	out = w
-	color = c
+	color = w == os.Stderr
 }
 
 // WithWriter instance a Logger middleware with the specified writter buffer.
