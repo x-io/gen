@@ -1,33 +1,108 @@
 package core
 
 import (
+	"bufio"
+	"io"
+	"net"
 	"net/http"
 )
 
-// Response is a wrapper around http.ResponseWriter that provides extra information about
-// the response. It is recommended that middleware handlers use this construct to wrap a responsewriter
-// if the functionality calls for it.
-type Response interface {
+//Response Response
+type Response struct {
 	http.ResponseWriter
 	http.Hijacker
 	http.Flusher
 	http.CloseNotifier
+	status int
+	size   int
+}
 
-	// Returns the HTTP response status code of the current request.
-	Status() int
+func (rw *Response) reset(w http.ResponseWriter) {
+	rw.ResponseWriter = w
+	rw.status = 0
+	rw.size = 0
+}
 
-	// Returns the number of bytes already written into the response http body.
-	// See Written()
-	Size() int
+//WriteHeader WriteHeader
+func (rw *Response) WriteHeader(code int) {
+	if code > 0 && rw.status != code {
+		// if w.Written() {
+		// 	debugPrint("[WARNING] Headers were already written. Wanted to override status code %d with %d", w.status, code)
+		// }
+		rw.status = code
+		rw.ResponseWriter.WriteHeader(code)
+	}
+}
 
-	// Returns true if the response body was already written.
-	Written() bool
+//WriteHeaderNow WriteHeaderNow
+func (rw *Response) WriteHeaderNow() {
+	if !rw.Written() {
+		rw.size = 0
+		// The status will be StatusOK if WriteHeader has not been called yet
+		rw.ResponseWriter.WriteHeader(rw.status)
+	}
+}
 
-	// Writes the string into the response body.
-	WriteString(string) (int, error)
-	// Forces to write the http header (status code + headers).
-	//WriteHeaderNow()
+func (rw *Response) Write(data []byte) (int, error) {
+	rw.WriteHeaderNow()
+	n, err := rw.ResponseWriter.Write(data)
+	rw.size += n
+	return n, err
+}
 
-	SetHeader(string, string)
-	SetStatus(int)
+//WriteString WriteString
+func (rw *Response) WriteString(s string) (int, error) {
+	rw.WriteHeaderNow()
+	n, err := io.WriteString(rw.ResponseWriter, s)
+	rw.size += n
+	return n, err
+}
+
+//Status Status
+func (rw *Response) Status() int {
+	return rw.status
+}
+
+//Size Size
+func (rw *Response) Size() int {
+	return rw.size
+}
+
+//Written Written
+func (rw *Response) Written() bool {
+	return rw.status != 0
+}
+
+//Hijack Implements the http.Hijacker interface
+func (rw *Response) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	if rw.size < 0 {
+		rw.size = 0
+	}
+	return rw.ResponseWriter.(http.Hijacker).Hijack()
+}
+
+//CloseNotify Implements the http.CloseNotify interface
+func (rw *Response) CloseNotify() <-chan bool {
+	return rw.ResponseWriter.(http.CloseNotifier).CloseNotify()
+}
+
+//Flush Implements the http.Flush interface
+func (rw *Response) Flush() {
+	rw.ResponseWriter.(http.Flusher).Flush()
+}
+
+//SetHeader SetHeader
+func (rw *Response) SetHeader(key, value string) {
+	rw.Header().Set(key, value)
+}
+
+//SetStatus SetStatus
+func (rw *Response) SetStatus(code int) {
+	if code > 0 && rw.status != code {
+		// if w.Written() {
+		// 	debugPrint("[WARNING] Headers were already written. Wanted to override status code %d with %d", w.status, code)
+		// }
+		rw.status = code
+		rw.ResponseWriter.WriteHeader(code)
+	}
 }

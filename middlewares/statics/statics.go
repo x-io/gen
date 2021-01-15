@@ -66,8 +66,8 @@ func prepareStaticOptions(options []Options) Options {
 // Middleware return a Static for serving static files
 func Middleware(options ...Options) core.Middleware {
 
-	return func(ctx core.Context) {
-		request := ctx.Request()
+	return func(ctx *core.Context) {
+		request := ctx.Request
 		if request.Method != "GET" && request.Method != "HEAD" {
 			ctx.Next()
 			return
@@ -100,7 +100,7 @@ func Middleware(options ...Options) core.Middleware {
 				} else {
 					ctx.Next()
 
-					if ctx.Result() == nil {
+					if ctx.Result == nil {
 						if opt.H5History {
 							//try serving index.html or index.htm
 							if len(opt.IndexFiles) > 0 {
@@ -121,7 +121,7 @@ func Middleware(options ...Options) core.Middleware {
 											return
 										}
 										if !finfo.IsDir() {
-											http.ServeContent(ctx.Response(), request, finfo.Name(), finfo.ModTime(), fi)
+											http.ServeContent(ctx.Response, request, finfo.Name(), finfo.ModTime(), fi)
 											return
 										}
 									}
@@ -153,7 +153,7 @@ func Middleware(options ...Options) core.Middleware {
 				return
 			}
 
-			http.ServeContent(ctx.Response(), request, finfo.Name(), finfo.ModTime(), f)
+			http.ServeContent(ctx.Response, request, finfo.Name(), finfo.ModTime(), f)
 			return
 		}
 
@@ -175,7 +175,7 @@ func Middleware(options ...Options) core.Middleware {
 						return
 					}
 					if !finfo.IsDir() {
-						http.ServeContent(ctx.Response(), request, finfo.Name(), finfo.ModTime(), fi)
+						http.ServeContent(ctx.Response, request, finfo.Name(), finfo.ModTime(), fi)
 						return
 					}
 				}

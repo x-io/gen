@@ -47,18 +47,17 @@ func prepareOptions(options []Options) Options {
 // Middleware new create a JWT Middleware
 func Middleware(options ...Options) core.Middleware {
 	option := prepareOptions(options)
-	return func(ctx core.Context) {
-		request := ctx.Request()
+	return func(ctx *core.Context) {
 
 		if option.CheckWebSocket {
 			// Skip WebSocket
-			if (request.Header.Get("Upgrade")) == "WebSocket" {
+			if (ctx.Request.Header.Get("Upgrade")) == "WebSocket" {
 				ctx.Next()
 				return
 			}
 		}
 
-		auth := request.Header.Get("Authorization")
+		auth := ctx.Request.Header.Get("Authorization")
 		l := len(option.Bearer)
 		if len(auth) > l+1 && auth[:l] == option.Bearer {
 			token, err := jwt.Parse(auth[l+1:], func(token *jwt.Token) (interface{}, error) {
@@ -74,9 +73,11 @@ func Middleware(options ...Options) core.Middleware {
 			if err == nil {
 				if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 
-					for k, v := range claims {
-						ctx.SetData(k, v)
-					}
+					ctx.SetData("JWT", claims) //["JWT"] = claims
+
+					// for k, v := range claims {
+					// 	ctx.SetData(k, v)
+					// }
 
 					ctx.Next()
 					return
@@ -85,7 +86,7 @@ func Middleware(options ...Options) core.Middleware {
 
 		}
 
-		if !isContain(option.Exclude, request.URL.Path) {
+		if !isContain(option.Exclude, ctx.Request.URL.Path) {
 			ctx.Write(errors.HTTP(http.StatusUnauthorized))
 			return
 		}

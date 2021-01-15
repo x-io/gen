@@ -163,7 +163,7 @@ func (r *Router) Match(method, path string) (core.Route, core.Params) {
 }
 
 //Middleware Middleware
-func (r *Router) Middleware(ctx core.Context, index int) bool {
+func (r *Router) Middleware(ctx *core.Context, index int) bool {
 	if index < len(r.middlewares) {
 		r.middlewares[index].Handle(ctx)
 		return true
@@ -231,7 +231,7 @@ func (r *Router) Middleware(ctx core.Context, index int) bool {
 // // 	//	r.middlewares = append(r.middlewares, m...)
 // // }
 
-// // func (r *Router) Middleware(ctx core.Context, index int) bool {
+// // func (r *Router) Middleware(ctx *core.Context, index int) bool {
 // // 	// if index < len(r.middlewares) {
 // // 	// 	r.middlewares[index].Handle(ctx)
 // // 	// 	return true
@@ -251,7 +251,7 @@ func (e *Route) Use(m ...core.Middleware) {
 }
 
 // Middleware Middleware
-func (e *Route) Middleware(ctx core.Context, index int) bool {
+func (e *Route) Middleware(ctx *core.Context, index int) bool {
 	if index < len(e.middlewares) {
 		e.middlewares[index].Handle(ctx)
 		return true

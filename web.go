@@ -7,8 +7,8 @@ import (
 	"github.com/x-io/gen/middlewares/statics"
 )
 
-//J Json
-type J map[string]interface{}
+//D Data
+type D map[string]interface{}
 
 // Version returns Framework's version
 func Version() string {
@@ -28,9 +28,6 @@ func Default() *Server {
 		logger.Middleware(),
 		io.Middleware(false),
 		statics.Middleware(statics.Options{H5History: false}),
-		//Return(),
-		//Param(),
-		//Contexts(),
 	)
 }
 
@@ -41,8 +38,5 @@ func H5History() *Server {
 		io.Middleware(false),
 		// statics.Middleware(statics.Config{Prefix: "static"}),
 		statics.Middleware(statics.Options{H5History: true}),
-		//Return(),
-		//Param(),
-		//Contexts(),
 	)
 }

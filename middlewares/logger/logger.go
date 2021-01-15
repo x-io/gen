@@ -52,30 +52,30 @@ func WithWriter(notlogged ...string) core.Middleware {
 		}
 	}
 
-	return func(c core.Context) {
+	return func(c *core.Context) {
 		// Start timer
 		start := time.Now()
 
 		// Process request
 		c.Next()
 
-		path := c.Request().URL.Path
+		path := c.Request.URL.Path
 		// Log only when path is not being skipped
 		if _, ok := skip[path]; !ok {
 			// Stop timer
 			end := time.Now()
 			latency := end.Sub(start)
-			method := c.Request().Method
+			method := c.Request.Method
 
 			clientIP := c.ClientIP()
-			statusCode := c.Response().Status()
+			statusCode := c.Response.Status()
 
-			path = c.Request().URL.String()
+			path = c.Request.URL.String()
 
 			//	comment := "" //c.Errors.ByType(ErrorTypePrivate).String()
 
 			if statusCode > 200 {
-				if result := c.Result(); result != nil {
+				if result := c.Result; result != nil {
 					fmt.Fprintf(out, "[Gen] %s \n", result)
 				}
 			}

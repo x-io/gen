@@ -25,7 +25,7 @@ func (jsonBinding) Bind(req *http.Request, obj interface{}) error {
 	return validate(obj)
 }
 
-func (jsonBinding) Write(response core.Response, obj interface{}) error {
+func (jsonBinding) Write(response *core.Response, obj interface{}) error {
 	response.Header().Set("Content-Type", "application/json; charset=utf-8")
 	if err := json.NewEncoder(response).Encode(obj); err != nil {
 		response.Header().Del("Content-Type")

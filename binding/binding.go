@@ -5,8 +5,6 @@
 package binding
 
 import (
-	"net/http"
-
 	"github.com/x-io/gen/core"
 )
 
@@ -21,13 +19,6 @@ const (
 	MIMEMultipartPOSTForm = "multipart/form-data"
 	MIMEPROTOBUF          = "application/x-protobuf"
 )
-
-//Binding Binding
-type Binding interface {
-	Name() string
-	Bind(*http.Request, interface{}) error
-	Write(core.Response, interface{}) error
-}
 
 //StructValidator StructValidator
 type StructValidator interface {
@@ -54,7 +45,7 @@ var (
 )
 
 //GetBinding Default
-func GetBinding(method, contentType string) Binding {
+func GetBinding(method, contentType string) core.Binding {
 	// if method == "GET" {
 	// 	return Form
 	// }

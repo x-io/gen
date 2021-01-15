@@ -35,12 +35,12 @@ type Routes interface {
 	Match(method, path string) (Route, Params)
 
 	//Use(middleware ...Middleware)
-	Middleware(Context, int) bool
+	Middleware(*Context, int) bool
 }
 
 // Route defines HTTP route
 type Route interface {
 	Use(middleware ...Middleware)
-	Middleware(Context, int) bool
+	Middleware(*Context, int) bool
 	Handle() interface{}
 }

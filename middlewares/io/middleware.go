@@ -17,13 +17,13 @@ import (
 func Middleware(debug bool) core.Middleware {
 	out := log.Writer()
 
-	return func(ctx core.Context) {
+	return func(ctx *core.Context) {
 
 		defer func() {
 			if err := recover(); err != nil {
 				if debug {
 					stack := stack(3)
-					httprequest, _ := httputil.DumpRequest(ctx.Request(), true)
+					httprequest, _ := httputil.DumpRequest(ctx.Request, true)
 					fmt.Fprintf(out, "[Gen] %v [Recovery] panic recovered: %s\n%s\n%s\n",
 						time.Now().Format("2006/01/02 - 15:04:05"),
 						err,
@@ -66,15 +66,17 @@ func Middleware(debug bool) core.Middleware {
 			}
 		}()
 
+		ctx.Binding = binding.GetBinding(ctx.Request.Method, ctx.ContentType())
+
 		ctx.Next()
-		response := ctx.Response()
+		response := ctx.Response
 		if response.Written() {
 			return
 		}
 
 		var content interface{}
 
-		switch res := ctx.Result().(type) {
+		switch res := ctx.Result.(type) {
 		case core.HTTPError:
 			if res.Status() > 0 {
 				response.WriteHeader(res.Status())
@@ -106,9 +108,7 @@ func Middleware(debug bool) core.Middleware {
 
 		if content != nil {
 
-			b := binding.GetBinding(ctx.Request().Method, ctx.ContentType())
-
-			if err := b.Write(response, content); err != nil {
+			if err := ctx.Binding.Write(response, content); err != nil {
 				//return err
 			}
 		}

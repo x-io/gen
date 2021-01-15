@@ -20,7 +20,7 @@ func TestRouteRawPath(t *testing.T) {
 	route := New()
 	// route.UseRawPath = true
 
-	route.Post("/project/:name/build/:num", func(c core.Context) {
+	route.Post("/project/:name/build/:num", func(c *core.Context) {
 		name := c.Params().Get("name")
 		num := c.Params().Get("num")
 

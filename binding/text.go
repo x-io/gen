@@ -22,7 +22,7 @@ func (textBinding) Bind(req *http.Request, obj interface{}) error {
 	return validate(obj)
 }
 
-func (textBinding) Write(response core.Response, obj interface{}) error {
+func (textBinding) Write(response *core.Response, obj interface{}) error {
 	switch data := obj.(type) {
 	case string:
 		response.WriteString(data)

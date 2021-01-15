@@ -37,8 +37,8 @@ func NewDefault() *Options {
 // Middleware new create a CORS Middleware
 func Middleware(options *Options) core.Middleware {
 
-	return func(ctx core.Context) {
-		response := ctx.Response()
+	return func(ctx *core.Context) {
+		response := ctx.Response
 
 		if options.Enabled {
 			response.SetHeader("Access-Control-Allow-Origin", options.AllowOrigin)

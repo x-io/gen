@@ -20,10 +20,18 @@ type (
 	}
 )
 
+func newContext(router core.Routes) *Context {
+	c := new(Context)
+	c.Router = router
+	c.Response = new(core.Response)
+	return c
+}
+
 func newServer() *Server {
+	route := router.New()
+
 	e := new(Server)
 	e.Handler = e
-	route := router.New()
 	e.Router = route
 	e.pool.New = func() interface{} {
 		return newContext(route)
@@ -33,9 +41,8 @@ func newServer() *Server {
 
 // ServeHTTP implementes net/http interface so that it could run with net/http
 func (e *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	c := e.pool.Get().(*context)
-	c.reset(w, req)
-	c.invoke()
+	c := e.pool.Get().(*Context)
+	c.ServeHTTP(w, req)
 	e.pool.Put(c)
 }
 

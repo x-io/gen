@@ -30,7 +30,7 @@ func (formBinding) Bind(req *http.Request, obj interface{}) error {
 	return validate(obj)
 }
 
-func (formBinding) Write(response core.Response, obj interface{}) error {
+func (formBinding) Write(response *core.Response, obj interface{}) error {
 	switch data := obj.(type) {
 	case string:
 		response.WriteString(data)
@@ -62,7 +62,7 @@ func (formPostBinding) Bind(req *http.Request, obj interface{}) error {
 	return validate(obj)
 }
 
-func (formPostBinding) Write(response core.Response, obj interface{}) error {
+func (formPostBinding) Write(response *core.Response, obj interface{}) error {
 	switch data := obj.(type) {
 	case string:
 		response.WriteString(data)
@@ -94,6 +94,6 @@ func (formMultipartBinding) Bind(req *http.Request, obj interface{}) error {
 	return validate(obj)
 }
 
-func (formMultipartBinding) Write(response core.Response, obj interface{}) error {
+func (formMultipartBinding) Write(response *core.Response, obj interface{}) error {
 	return nil
 }

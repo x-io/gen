@@ -35,6 +35,6 @@ func (protobufBinding) Bind(req *http.Request, obj interface{}) error {
 	//return validate(obj)
 }
 
-func (protobufBinding) Write(response core.Response, obj interface{}) error {
+func (protobufBinding) Write(response *core.Response, obj interface{}) error {
 	return nil
 }
