@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/x-io/gen/core"
+	"github.com/x-io/gen/errors"
 )
 
 // Options defines Static middleware's options
@@ -94,9 +95,11 @@ func Middleware(options ...Options) core.Middleware {
 		if err != nil {
 			if os.IsNotExist(err) {
 				if opt.Prefix != "" {
-					ctx.NotFound()
+					ctx.Write(errors.HTTP(http.StatusNotFound, err))
+					//	ctx.Abort(http.StatusNotFound, err.Error())
 				} else {
 					ctx.Next()
+
 					if ctx.Result() == nil {
 						if opt.H5History {
 							//try serving index.html or index.htm
@@ -105,14 +108,16 @@ func Middleware(options ...Options) core.Middleware {
 									fi, err := opt.FileSystem.Open(strings.TrimLeft(index, "/"))
 									if err != nil {
 										if !os.IsNotExist(err) {
-											ctx.Abort(http.StatusInternalServerError, err.Error())
+											ctx.Write(errors.HTTP(http.StatusInternalServerError, err))
+											//	ctx.Abort(http.StatusInternalServerError, err.Error())
 											return
 										}
 									} else {
 										defer fi.Close()
 										finfo, err := fi.Stat()
 										if err != nil {
-											ctx.Abort(http.StatusInternalServerError, err.Error())
+											ctx.Write(errors.HTTP(http.StatusInternalServerError, err))
+											//ctx.Abort(http.StatusInternalServerError, err.Error())
 											return
 										}
 										if !finfo.IsDir() {
@@ -123,11 +128,13 @@ func Middleware(options ...Options) core.Middleware {
 								}
 							}
 						}
-						ctx.NotFound()
+						ctx.Write(errors.HTTP(http.StatusNotFound, err))
+						//ctx.Abort(http.StatusNotFound, err.Error())
 					}
 				}
 			} else {
-				ctx.Abort(http.StatusInternalServerError, err.Error())
+				ctx.Write(errors.HTTP(http.StatusInternalServerError, err))
+				//ctx.Abort(http.StatusInternalServerError, err.Error())
 			}
 			return
 		}
@@ -135,7 +142,8 @@ func Middleware(options ...Options) core.Middleware {
 
 		finfo, err := f.Stat()
 		if err != nil {
-			ctx.Abort(http.StatusInternalServerError, err.Error())
+			ctx.Write(errors.HTTP(http.StatusInternalServerError, err))
+			//ctx.Abort(http.StatusInternalServerError, err.Error())
 			return
 		}
 
@@ -155,13 +163,15 @@ func Middleware(options ...Options) core.Middleware {
 				fi, err := opt.FileSystem.Open(strings.TrimLeft(path.Join(rPath, index), "/"))
 				if err != nil {
 					if !os.IsNotExist(err) {
-						ctx.Abort(http.StatusInternalServerError, err.Error())
+						ctx.Write(errors.HTTP(http.StatusInternalServerError, err))
+						//ctx.Abort(http.StatusInternalServerError, err.Error())
 						return
 					}
 				} else {
 					finfo, err = fi.Stat()
 					if err != nil {
-						ctx.Abort(http.StatusInternalServerError, err.Error())
+						ctx.Write(errors.HTTP(http.StatusInternalServerError, err))
+						//	ctx.Abort(http.StatusInternalServerError, err.Error())
 						return
 					}
 					if !finfo.IsDir() {

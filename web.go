@@ -2,8 +2,8 @@ package gen
 
 import (
 	"github.com/x-io/gen/core"
+	"github.com/x-io/gen/middlewares/io"
 	"github.com/x-io/gen/middlewares/logger"
-	"github.com/x-io/gen/middlewares/recovery"
 	"github.com/x-io/gen/middlewares/statics"
 )
 
@@ -26,8 +26,7 @@ func New(middlewares ...core.Middleware) *Server {
 func Default() *Server {
 	return New(
 		logger.Middleware(),
-		recovery.Middleware(false),
-		//	Compresses([]string{}),
+		io.Middleware(false),
 		statics.Middleware(statics.Options{H5History: false}),
 		//Return(),
 		//Param(),
@@ -39,8 +38,7 @@ func Default() *Server {
 func H5History() *Server {
 	return New(
 		logger.Middleware(),
-		recovery.Middleware(false),
-		//	Compresses([]string{}),
+		io.Middleware(false),
 		// statics.Middleware(statics.Config{Prefix: "static"}),
 		statics.Middleware(statics.Options{H5History: true}),
 		//Return(),

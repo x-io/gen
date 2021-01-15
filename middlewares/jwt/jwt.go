@@ -4,58 +4,20 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/x-io/gen/core"
+	"github.com/x-io/gen/errors"
 )
 
 var (
 	defaultBearer = "Bearer"
-	defaultKey    = "JWT"
-	claimKey      = "X-IO"
-	claimVersion  = ""
+	defaultKey    = "X-IO"
 )
-
-// type auther interface {
-// 	SetClaims(map[string]interface{})
-// 	GetClaim(string) interface{}
-// }
-
-type Auther map[string]interface{}
-
-func (a Auther) SetClaims(claims map[string]interface{}) {
-	a = claims
-}
-
-func (a Auther) GetClaim(key string) interface{} {
-	return a[key]
-}
-
-//Init Init
-func Init(key, version string) {
-	claimKey = key
-	claimVersion = version
-}
-
-//NewToken NewToken
-func NewToken(claims ...map[string]interface{}) (string, error) {
-	claim := make(jwt.MapClaims)
-	claim["version"] = claimVersion
-	claim["exp"] = time.Now().Add(time.Hour * 72).Unix()
-	if len(claims) > 0 {
-		for k, v := range claims[0] {
-			claim[k] = v
-		}
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
-
-	return token.SignedString([]byte(claimKey))
-}
 
 //Options Options
 type Options struct {
+	Key            string
 	Bearer         string
 	CheckWebSocket bool
 	Exclude        []string
@@ -75,6 +37,10 @@ func prepareOptions(options []Options) Options {
 	if len(opt.Bearer) == 0 {
 		opt.Bearer = defaultBearer
 	}
+	if len(opt.Key) == 0 {
+		opt.Key = defaultKey
+	}
+
 	return opt
 }
 
@@ -92,8 +58,6 @@ func Middleware(options ...Options) core.Middleware {
 			}
 		}
 
-		//if a, ok := ctx.Action().(auther); ok {
-
 		auth := request.Header.Get("Authorization")
 		l := len(option.Bearer)
 		if len(auth) > l+1 && auth[:l] == option.Bearer {
@@ -104,7 +68,7 @@ func Middleware(options ...Options) core.Middleware {
 				}
 
 				// Return the key for validation
-				return []byte(claimKey), nil
+				return []byte(option.Key), nil
 			})
 
 			if err == nil {
@@ -118,13 +82,11 @@ func Middleware(options ...Options) core.Middleware {
 					return
 				}
 			}
-			// ctx.Abort(http.StatusForbidden)
-			// return
+
 		}
-		//}
 
 		if !isContain(option.Exclude, request.URL.Path) {
-			ctx.Abort(http.StatusUnauthorized)
+			ctx.Write(errors.HTTP(http.StatusUnauthorized))
 			return
 		}
 
@@ -132,32 +94,9 @@ func Middleware(options ...Options) core.Middleware {
 	}
 }
 
-//Parse Parse
-func Parse(bearerKey, tokenString string) (jwt.MapClaims, error) {
-	l := len(bearerKey)
-	token, err := jwt.Parse(tokenString[l+1:], func(token *jwt.Token) (interface{}, error) {
-		// Always check the signing method
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-		}
-
-		// Return the key for validation
-		return []byte(claimKey), nil
-	})
-
-	if err == nil {
-		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-
-			return claims, nil
-		}
-	}
-
-	return nil, err
-}
-
 func isContain(items []string, item string) bool {
 	for _, v := range items {
-		if v == "*" || strings.HasPrefix(item, v) {
+		if v == "*" || strings.Contains(item, v) {
 			return true
 		}
 	}

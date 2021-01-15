@@ -1,13 +1,13 @@
 package gen
 
 import (
-	"database/sql"
 	"net"
 	"net/http"
 	"strings"
 
 	"github.com/x-io/gen/binding"
 	"github.com/x-io/gen/core"
+	"github.com/x-io/gen/errors"
 )
 
 const (
@@ -26,6 +26,7 @@ type context struct {
 	request  *http.Request
 	response *Response
 	result   interface{}
+	//	status   int
 
 	matched bool
 	level   bool
@@ -77,37 +78,27 @@ func (ctx *context) execute() {
 		}
 
 		switch fn := ctx.route.Handle().(type) {
-		case func(core.Context):
-			fn(ctx)
 		case func(core.Context) interface{}:
 			if data := fn(ctx); data != nil {
-				switch v := data.(type) {
-				case error:
-					ctx.BadRequest(v)
-				default:
-					if !ctx.response.Written() {
-						ctx.Write(v)
-					}
-				}
-			} else {
-				ctx.NoContent()
+				ctx.result = data
 			}
 		case func(core.Context) (interface{}, error):
 			if data, err := fn(ctx); err != nil {
-				ctx.BadRequest(err)
-			} else if !ctx.response.Written() {
-				ctx.Write(data)
+				ctx.result = err
+			} else {
+				ctx.result = data
 			}
 		case func(core.Context) error:
 			if err := fn(ctx); err != nil {
-				ctx.BadRequest(err)
+				ctx.result = err
 			}
 		default:
 
 		}
 		// not route matched
 	} else if !ctx.response.Written() {
-		ctx.NotFound()
+		ctx.result = errors.HTTP(http.StatusNotFound)
+		//	ctx.NotFound()
 	}
 }
 
@@ -206,8 +197,8 @@ func (ctx *context) Bind(obj interface{}) error {
 }
 
 func (ctx *context) Write(obj interface{}) error {
-	b := binding.GetBinding(ctx.request.Method, ctx.ContentType())
-	return ctx.WriteWith(obj, b)
+	ctx.result = obj
+	return nil
 }
 
 // BindJSON is a shortcut for c.BindWith(obj, binding.JSON)
@@ -225,20 +216,22 @@ func (ctx *context) BindWith(obj interface{}, b binding.Binding) error {
 }
 
 func (ctx *context) WriteWith(obj interface{}, b binding.Binding) error {
-	ctx.result = ""
-	ctx.response.WriteHeader(200)
+	ctx.result = obj
 
-	if obj != nil {
-		ctx.result = obj
-		if v, ok := obj.([]byte); ok {
-			ctx.response.Write(v)
-			return nil
-		}
+	// ctx.result = ""
+	// ctx.response.WriteHeader(200)
 
-		if err := b.Write(ctx.response, obj); err != nil {
-			return err
-		}
-	}
+	// if obj != nil {
+	// 	ctx.result = obj
+	// 	if v, ok := obj.([]byte); ok {
+	// 		ctx.response.Write(v)
+	// 		return nil
+	// 	}
+
+	// 	if err := b.Write(ctx.response, obj); err != nil {
+	// 		return err
+	// 	}
+	// }
 
 	return nil
 }
@@ -344,97 +337,52 @@ func (ctx *context) Redirect(url string, status ...int) error {
 	return nil
 }
 
-// NoContent writes a 204 HTTP response
-func (ctx *context) NoContent(message ...interface{}) error {
-	return ctx.Abort(http.StatusNoContent, message...)
-}
+// func (ctx *context) Error(status int, body ...error) error {
+// 	ctx.index = 100
+// 	ctx.result = body[0]
+// 	ctx.response.WriteHeader(status)
+// 	if len(body) == 0 {
+// 		ctx.response.WriteString(http.StatusText(status))
+// 	} else {
+// 		ctx.response.WriteString(body[0].Error())
+// 	}
 
-// NotModified writes a 304 HTTP response
-func (ctx *context) NotModified(message ...interface{}) error {
-	return ctx.Abort(http.StatusNotModified, message...)
-}
+// 	return nil
+// }
 
-// BadRequest writes a 400 HTTP response
-func (ctx *context) BadRequest(message ...interface{}) error {
-	return ctx.Abort(http.StatusBadRequest, message...)
-}
+// // Abort is a helper method that sends an HTTP header and an optional
+// // body. It is useful for returning 4xx or 5xx errors.
+// // Once it has been called, any return value from the handler will
+// // not be written to the response.
+// func (ctx *context) Abort(status int, body ...interface{}) error {
 
-// Unauthorized writes a 401 HTTP response
-func (ctx *context) Unauthorized(message ...interface{}) error {
-	return ctx.Abort(http.StatusUnauthorized, message...)
-}
+// 	if len(body) > 0 {
+// 		ctx.result = body[0]
+// 	} else {
+// 		ctx.result = ""
+// 	}
 
-// NotFound writes a 404 HTTP response
-func (ctx *context) NotFound(message ...interface{}) error {
-	return ctx.Abort(http.StatusNotFound, message...)
-}
+// 	ctx.index = 100
+// 	ctx.status = status
 
-func (ctx *context) Error(status int, body ...error) error {
-	ctx.index = 100
-	ctx.result = body[0]
-	ctx.response.WriteHeader(status)
-	if len(body) == 0 {
-		ctx.response.WriteString(http.StatusText(status))
-	} else {
-		ctx.response.WriteString(body[0].Error())
-	}
+// 	return nil
+// }
 
-	return nil
-}
+// //ToJSON serves marshaled JSON content from obj
+// func (ctx *context) ToJSON(obj interface{}) error {
+// 	return ctx.WriteWith(obj, binding.JSON)
+// }
 
-// Abort is a helper method that sends an HTTP header and an optional
-// body. It is useful for returning 4xx or 5xx errors.
-// Once it has been called, any return value from the handler will
-// not be written to the response.
-func (ctx *context) Abort(status int, body ...interface{}) error {
-	ctx.index = 100
+// //ToXML serves marshaled XML content from obj
+// func (ctx *context) ToXML(obj interface{}) error {
+// 	return ctx.WriteWith(obj, binding.XML)
+// }
 
-	if len(body) > 0 {
-		ctx.result = body[0]
-	} else {
-		ctx.result = ""
-	}
+// func (ctx *context) ToString(obj string) error {
+// 	return ctx.WriteWith(obj, binding.Text)
+// }
 
-	if len(body) == 0 {
-		ctx.response.WriteHeader(status)
-		ctx.response.WriteString(http.StatusText(status))
-	} else {
-		switch d := body[0].(type) {
-		case string:
-			ctx.response.WriteHeader(status)
-			ctx.response.WriteString(d)
-		case error:
-			if d == sql.ErrNoRows {
-				ctx.response.WriteHeader(http.StatusNoContent)
-				ctx.result = ""
-			} else {
-				ctx.response.WriteHeader(status)
-				ctx.response.WriteString(d.Error())
-			}
-		default:
-			ctx.response.WriteHeader(status)
-			ctx.Write(body[0])
-		}
-	}
-
-	return nil
-}
-
-//ToJSON serves marshaled JSON content from obj
-func (ctx *context) ToJSON(obj interface{}) error {
-	return ctx.WriteWith(obj, binding.JSON)
-}
-
-//ToXML serves marshaled XML content from obj
-func (ctx *context) ToXML(obj interface{}) error {
-	return ctx.WriteWith(obj, binding.XML)
-}
-
-func (ctx *context) ToString(obj string) error {
-	return ctx.WriteWith(obj, binding.Text)
-}
-
-func (ctx *context) ToData(obj interface{}) error {
-	b := binding.GetBinding(ctx.request.Method, ctx.ContentType())
-	return ctx.WriteWith(obj, b)
-}
+// func (ctx *context) ToData(obj interface{}) error {
+// 	b := binding.GetBinding(ctx.request.Method, ctx.ContentType())
+// 	return ctx.WriteWith(obj, b)
+// }
