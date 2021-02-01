@@ -21,11 +21,11 @@ func TestRouteRawPath(t *testing.T) {
 	// route.UseRawPath = true
 
 	route.Post("/project/:name/build/:num", func(c *core.Context) {
-		name := c.Params().Get("name")
-		num := c.Params().Get("num")
+		name := c.Params("name")
+		num := c.Params("num")
 
-		assert.Equal(t, name, c.Params().Get("name"))
-		assert.Equal(t, num, c.Params().Get("num"))
+		assert.Equal(t, name, c.Params("name"))
+		assert.Equal(t, num, c.Params("num"))
 
 		assert.Equal(t, "Some/Other/Project", name)
 		assert.Equal(t, "222", num)

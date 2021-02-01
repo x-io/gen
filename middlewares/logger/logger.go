@@ -74,7 +74,7 @@ func WithWriter(notlogged ...string) core.Middleware {
 
 			//	comment := "" //c.Errors.ByType(ErrorTypePrivate).String()
 
-			if statusCode > 200 {
+			if statusCode > 300 {
 				if result := c.Result; result != nil {
 					fmt.Fprintf(out, "[Gen] %s \n", result)
 				}

@@ -10,7 +10,6 @@ import (
 
 	"github.com/x-io/gen/binding"
 	"github.com/x-io/gen/core"
-	"github.com/x-io/gen/errors"
 )
 
 //Middleware Middleware
@@ -36,9 +35,8 @@ func Middleware(debug bool) core.Middleware {
 						err,
 					)
 				}
-				ctx.Write(errors.HTTP(500))
-
-				//	ctx.Abort(500)
+				ctx.Response.WriteHeader(http.StatusInternalServerError)
+				ctx.Response.WriteString(http.StatusText(http.StatusInternalServerError))
 
 				// var buf bytes.Buffer
 				// fmt.Fprintf(&buf, "Handler crashed with error: %v", err)
@@ -86,8 +84,12 @@ func Middleware(debug bool) core.Middleware {
 				response.WriteString(res.Error())
 			}
 		case core.Error:
-			response.WriteHeader(http.StatusBadRequest)
-			content = res
+			if res == sql.ErrNoRows {
+				response.WriteHeader(http.StatusNoContent)
+			} else {
+				response.WriteHeader(http.StatusBadRequest)
+				content = res
+			}
 		case error:
 			if res == sql.ErrNoRows {
 				response.WriteHeader(http.StatusNoContent)
@@ -107,7 +109,6 @@ func Middleware(debug bool) core.Middleware {
 		}
 
 		if content != nil {
-
 			if err := ctx.Binding.Write(response, content); err != nil {
 				//return err
 			}
