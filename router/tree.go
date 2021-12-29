@@ -348,20 +348,10 @@ walk: // Outer loop for walking the tree
 						ps = make(Params, 0)
 					}
 					// Expand slice within preallocated capacity
-					i := len(ps)
-					if i > 0 {
-						ps = (ps)[:i+1]
-						(ps)[i] = Param{
-							Key:   n.path[1:],
-							Value: path[:end],
-						}
-					} else {
-
-						ps = append(ps, Param{
-							Key:   n.path[1:],
-							Value: path[:end],
-						})
-					}
+					ps = append(ps, Param{
+						Key:   n.path[1:],
+						Value: path[:end],
+					})
 
 					// We need to go deeper!
 					if end < len(path) {
@@ -394,12 +384,10 @@ walk: // Outer loop for walking the tree
 						ps = make(Params, 0)
 					}
 					// Expand slice within preallocated capacity
-					i := len(ps)
-					ps = (ps)[:i+1]
-					(ps)[i] = Param{
+					ps = append(ps, Param{
 						Key:   n.path[2:],
 						Value: path,
-					}
+					})
 
 					handle = n.handle
 					return

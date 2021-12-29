@@ -231,7 +231,7 @@ func (e *Route) Meta(name string) string {
 func pathDecode(data string) (string, string) {
 
 	//解析正则表达式，如果成功返回解释器
-	reg := regexp.MustCompile(`\[([\w\,\|]+)\]`)
+	reg := regexp.MustCompile(`\[([\w\,\|]+)\]|\{([\w]+)\}`)
 	if reg == nil { //解释失败，返回nil
 		return data, ""
 	}
@@ -241,9 +241,14 @@ func pathDecode(data string) (string, string) {
 	matchs := reg.FindAllStringSubmatch(path, -1)
 
 	for _, v := range matchs {
-		if len(v) > 0 {
-			metas = append(metas, v[1])
-			path = strings.Replace(path, v[0], "", -1)
+		if len(v) == 3 {
+			if len(v[2]) > 0 {
+				metas = append(metas, v[2])
+				path = strings.Replace(path, v[0], v[2], -1)
+			} else {
+				metas = append(metas, v[1])
+				path = strings.Replace(path, v[0], "", -1)
+			}
 		}
 	}
 	return path, strings.Join(metas, ",")
