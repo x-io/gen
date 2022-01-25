@@ -83,16 +83,20 @@ func Middleware(options ...Options) core.Middleware {
 					return
 				}
 			}
-
 		}
 
-		if !isContain(option.Exclude, ctx.Request.URL.Path) {
+		meta := ctx.Meta("route")
+		if !isSkip(meta) && !isContain(option.Exclude, ctx.Request.URL.Path) {
 			ctx.Write(errors.HTTP(http.StatusUnauthorized))
 			return
 		}
 
 		ctx.Next()
 	}
+}
+
+func isSkip(meta string) bool {
+	return strings.Contains(meta+",", "^jwt,")
 }
 
 func isContain(items []string, item string) bool {

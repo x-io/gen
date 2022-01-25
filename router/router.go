@@ -231,7 +231,7 @@ func (e *Route) Meta(name string) string {
 func pathDecode(data string) (string, string) {
 
 	//解析正则表达式，如果成功返回解释器
-	reg := regexp.MustCompile(`\[([\w\,\|]+)\]|\{([\w]+)\}`)
+	reg := regexp.MustCompile(`\[([\w\,\|\^]+)\]|\{([\w]+)\}`)
 	if reg == nil { //解释失败，返回nil
 		return data, ""
 	}
