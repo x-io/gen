@@ -1,6 +1,7 @@
 package router
 
 import (
+	"net/url"
 	"regexp"
 	"strings"
 
@@ -9,7 +10,7 @@ import (
 
 type routeTable map[string]*node
 
-//Router Router
+// Router Router
 type Router struct {
 	level       int
 	prefix      string
@@ -18,7 +19,7 @@ type Router struct {
 	meta        map[string]string
 }
 
-//New NewRouter
+// New NewRouter
 func New() *Router {
 	r := new(Router)
 
@@ -48,7 +49,7 @@ func (r *Router) add(methods []string, path string, handler interface{}, m ...co
 	}
 }
 
-//Use Use
+// Use Use
 func (r *Router) Use(m ...core.Middleware) core.Router {
 	if r.middlewares == nil {
 		r.middlewares = make([]core.Middleware, 0)
@@ -58,7 +59,7 @@ func (r *Router) Use(m ...core.Middleware) core.Router {
 	return r
 }
 
-//Use Meta
+// Use Meta
 func (r *Router) Meta(name, value string) core.Router {
 	if r.meta == nil {
 		r.meta = make(map[string]string)
@@ -68,7 +69,7 @@ func (r *Router) Meta(name, value string) core.Router {
 	return r
 }
 
-//Group Group
+// Group Group
 func (r *Router) Group(prefix string, m ...core.Middleware) core.Router {
 	if r.level == 0 {
 		return newGroup(r.table, r.prefix+prefix, r.level+1, m...)
@@ -122,7 +123,7 @@ func (r *Router) Any(path string, handler interface{}, m ...core.Middleware) cor
 	return r.add([]string{"GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "TRACE", "PATCH"}, path, handler, m...)
 }
 
-//Handle Handle
+// Handle Handle
 func (r *Router) Handle(method string, path string, handler interface{}, m ...core.Middleware) core.Route {
 	return r.add([]string{method}, path, handler, m...)
 }
@@ -172,23 +173,23 @@ func (r *Router) Route(methods []string, path string, handler interface{}, m ...
 }
 
 // Match for request path, match router
-func (r *Router) Match(method, path string) (core.Route, core.Params) {
-	path = strings.TrimSuffix(path, "/")
-	if root := r.table[method]; root != nil {
-		if route, params, _ := root.getValue(path); route != nil {
-			return route, &params
-		}
+func (r *Router) Match(method string, url *url.URL) (core.Route, core.Params) {
+	path := strings.TrimSuffix(url.String(), "/")
+	root := r.table[method]
+
+	if root == nil {
+		root = r.table["*"]
 	}
-	if root := r.table["*"]; root != nil {
+	if root != nil {
 		if route, params, _ := root.getValue(path); route != nil {
-			return route, &params
+			return route, params
 		}
 	}
 
 	return nil, nil
 }
 
-//Middleware Middleware
+// Middleware Middleware
 func (r *Router) Middleware(ctx *core.Context, index int) bool {
 	if index < len(r.middlewares) {
 		r.middlewares[index].Handle(ctx)
@@ -219,7 +220,7 @@ func (e *Route) Middleware(ctx *core.Context, index int) bool {
 	return false
 }
 
-//Handle Handle
+// Handle Handle
 func (e *Route) Handle() interface{} {
 	return e.handle
 }
@@ -229,7 +230,6 @@ func (e *Route) Meta(name string) string {
 }
 
 func pathDecode(data string) (string, string) {
-
 	//解析正则表达式，如果成功返回解释器
 	reg := regexp.MustCompile(`\[([\w\,\|\^]+)\]|\{([\w]+)\}`)
 	if reg == nil { //解释失败，返回nil

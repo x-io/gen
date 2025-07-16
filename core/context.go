@@ -54,7 +54,7 @@ func (c *Context) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 func (c *Context) newAction() {
 	if !c.matched {
 		if c.route == nil {
-			c.route, c.params = c.Router.Match(c.Request.Method, c.Request.URL.Path)
+			c.route, c.params = c.Router.Match(c.Request.Method, c.Request.URL)
 		}
 		c.matched = true
 	}
@@ -138,16 +138,17 @@ func (c *Context) Query(name string) string {
 }
 
 // Querys returns params
-func (c *Context) Querys(name string) Values {
-	return Values(c.Request.FormValue(name))
+func (c *Context) Querys(name string) Value {
+	return Value(c.Request.FormValue(name))
 }
 
 // Meta returns params
 func (c *Context) Meta(name string) string {
+	c.newAction()
 	return c.route.Meta(name)
 }
 
-//Data Data
+// Data Data
 func (c *Context) Data(name string) interface{} {
 
 	if v, ok := c.data[name]; ok {
@@ -157,47 +158,17 @@ func (c *Context) Data(name string) interface{} {
 	return nil
 }
 
-//SetData SetData
+// SetData SetData
 func (c *Context) SetData(name string, value interface{}) {
 	c.data[name] = value
 }
 
-// //Data Data
-// func (c *Context) Data(key, name string) Values {
-
-// 	if v, ok := c.data[key]; ok {
-// 		if vv, ok := v.(map[string]interface{}); ok {
-// 			if vvv, ok := vv[key]; ok {
-// 				return Values(vvv.(string))
-// 			}
-// 		}
-// 	}
-
-// 	return ""
-// }
-
-// //Get ...
-// func (c *Context) Get(name string) Values {
-
-// 	if v, ok := c.Request.Header[name]; ok {
-// 		return Values(v[0])
-// 	}
-
-// 	if v, ok := c.Data[name]; ok {
-// 		return Values(v.(string))
-// 	}
-
-// 	if v := c.Request.FormValue(name); v != "" {
-// 		return Values(v)
-// 	}
-
-// 	return ""
-// }
-
 // Bind checks the Content-Type to select a binding engine automatically,
 // Depending the "Content-Type" header different bindings are used:
-// 		"application/json" --> JSON binding
-// 		"application/xml"  --> XML binding
+//
+//	"application/json" --> JSON binding
+//	"application/xml"  --> XML binding
+//
 // otherwise --> returns an error
 // It parses the request's body as JSON if Content-Type == "application/json" using JSON or XML as a JSON input.
 // It decodes the json payload into the struct specified as a pointer.

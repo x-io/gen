@@ -1,5 +1,7 @@
 package core
 
+import "net/url"
+
 //Router Router
 type Router interface {
 	//Use Use
@@ -34,7 +36,7 @@ type Router interface {
 //Routes describes the interface of route
 type Routes interface {
 	//Route(methods []string, path string, handler interface{}, middleware ...Middleware) Route
-	Match(method, path string) (Route, Params)
+	Match(method string, url *url.URL) (Route, Params)
 
 	//Use(middleware ...Middleware)
 	Middleware(*Context, int) bool

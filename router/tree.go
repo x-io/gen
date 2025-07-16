@@ -1,7 +1,10 @@
 package router
 
 import (
+	"net/url"
 	"strings"
+
+	"github.com/x-io/gen/core"
 )
 
 func min(a, b int) int {
@@ -305,10 +308,12 @@ func (n *node) insertChild(path, fullPath string, handle *Route) {
 // If no handle can be found, a TSR (trailing slash redirect) recommendation is
 // made if a handle exists with an extra (without the) trailing slash for the
 // given path.
-func (n *node) getValue(path string) (handle *Route, ps Params, tsr bool) {
+func (n *node) getValue(path string) (handle *Route, ps core.Params, tsr bool) {
+	var prefix, v string
+	ps = make(core.Params)
 walk: // Outer loop for walking the tree
 	for {
-		prefix := n.path
+		prefix = n.path
 		if len(path) > len(prefix) {
 			if path[:len(prefix)] == prefix {
 				path = path[len(prefix):]
@@ -343,15 +348,10 @@ walk: // Outer loop for walking the tree
 					}
 
 					// save param value
-					if ps == nil {
-						// lazy allocation
-						ps = make(Params, 0)
-					}
+					v, _ = url.QueryUnescape(path[:end])
+
 					// Expand slice within preallocated capacity
-					ps = append(ps, Param{
-						Key:   n.path[1:],
-						Value: path[:end],
-					})
+					ps.Set(n.path[1:], v)
 
 					// We need to go deeper!
 					if end < len(path) {
@@ -379,15 +379,9 @@ walk: // Outer loop for walking the tree
 
 				case catchAll:
 					// save param value
-					if ps == nil {
-						// lazy allocation
-						ps = make(Params, 0)
-					}
+					v, _ := url.QueryUnescape(path)
 					// Expand slice within preallocated capacity
-					ps = append(ps, Param{
-						Key:   n.path[2:],
-						Value: path,
-					})
+					ps.Set(n.path[2:], v)
 
 					handle = n.handle
 					return
