@@ -174,14 +174,18 @@ func (r *Router) Route(methods []string, path string, handler interface{}, m ...
 
 // Match for request path, match router
 func (r *Router) Match(method string, url *url.URL) (core.Route, core.Params) {
-	path := strings.TrimSuffix(url.String(), "/")
-	root := r.table[method]
+	// fmt.Println(url, url.Path, url.RawPath)
+	path := url.Path
+	if len(url.RawPath) > 0 {
+		path = url.RawPath
+	}
 
+	root := r.table[method]
 	if root == nil {
 		root = r.table["*"]
 	}
 	if root != nil {
-		if route, params, _ := root.getValue(path); route != nil {
+		if route, params, _ := root.getValue(strings.TrimSuffix(path, "/")); route != nil {
 			return route, params
 		}
 	}
