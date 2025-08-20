@@ -145,6 +145,9 @@ func (c *Context) Querys(name string) Value {
 // Meta returns params
 func (c *Context) Meta(name string) string {
 	c.newAction()
+	if c.route == nil {
+		return ""
+	}
 	return c.route.Meta(name)
 }
 
