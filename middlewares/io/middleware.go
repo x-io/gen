@@ -1,7 +1,6 @@
 package io
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,7 +11,7 @@ import (
 	"github.com/x-io/gen/core"
 )
 
-//Middleware Middleware
+// Middleware Middleware
 func Middleware(debug bool) core.Middleware {
 	out := log.Writer()
 
@@ -75,28 +74,24 @@ func Middleware(debug bool) core.Middleware {
 		var content interface{}
 
 		switch res := ctx.Result.(type) {
-		case core.HTTPError:
-			if res.Status() > 0 {
-				response.WriteHeader(res.Status())
-				response.WriteString(http.StatusText(res.Status()))
-			} else {
-				response.WriteHeader(http.StatusBadRequest)
-				response.WriteString(res.Error())
-			}
 		case core.Error:
-			if res == sql.ErrNoRows {
-				response.WriteHeader(http.StatusNoContent)
+			if res.HttpStatus() > 0 {
+				response.WriteHeader(res.HttpStatus())
+				response.WriteString(http.StatusText(res.HttpStatus()))
 			} else {
 				response.WriteHeader(http.StatusBadRequest)
 				content = res
 			}
+		// case core.Error:
+		// 	if res == sql.ErrNoRows {
+		// 		response.WriteHeader(http.StatusNoContent)
+		// 	} else {
+		// 		response.WriteHeader(http.StatusBadRequest)
+		// 		content = res
+		// 	}
 		case error:
-			if res == sql.ErrNoRows {
-				response.WriteHeader(http.StatusNoContent)
-			} else {
-				response.WriteHeader(http.StatusBadRequest)
-				response.WriteString(res.Error())
-			}
+			response.WriteHeader(http.StatusBadRequest)
+			response.WriteString(res.Error())
 		case string:
 			response.WriteHeader(http.StatusOK)
 			response.WriteString(res)
