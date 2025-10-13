@@ -92,6 +92,9 @@ func Middleware(debug bool) core.Middleware {
 		case error:
 			response.WriteHeader(http.StatusBadRequest)
 			response.WriteString(res.Error())
+		case *string:
+			response.WriteHeader(http.StatusOK)
+			response.WriteString(*res)
 		case string:
 			response.WriteHeader(http.StatusOK)
 			response.WriteString(res)
